@@ -4,9 +4,10 @@ const app = express();
 
 const PORT = 5000;
 
-app.get("/", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({
-    message: "Welcome to Nexora API",
+    success: true,
+    message: "Nexora API is running",
   });
 });
 
