@@ -1,16 +1,12 @@
 import express from "express";
+import healthRoutes from "./routes/healthRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 
-const PORT = 5000;
+app.use(express.json());
 
-app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "Nexora API is running",
-  });
-});
+app.use("/api/health", healthRoutes);
+app.use("/api/auth", authRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Nexora server running on http://localhost:${PORT}`);
-});
+export default app;
