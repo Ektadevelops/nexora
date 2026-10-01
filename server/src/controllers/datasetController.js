@@ -32,13 +32,63 @@ export const createDataset = async (req, res) => {
 };
 export const getDatasets = async (req, res) => {
   try {
-    const datasets = await Dataset.find({
+    const {
+      search = "",
+      category,
+      status,
+      page = 1,
+      limit = 10,
+      sortBy = "createdAt",
+      order = "desc",
+    } = req.query;
+
+    const currentPage = Math.max(Number(page), 1);
+    const pageLimit = Math.min(Math.max(Number(limit), 1), 100);
+    const skip = (currentPage - 1) * pageLimit;
+
+    const filter = {
       createdBy: req.user.userId,
-    }).sort({ createdAt: -1 });
+    };
+
+    if (search) {
+      filter.name = {
+        $regex: search,
+        $options: "i",
+      };
+    }
+
+    if (category) {
+      filter.category = category;
+    }
+
+    if (status) {
+      filter.status = status;
+    }
+
+    const sortOrder = order === "asc" ? 1 : -1;
+
+    const [datasets, total] = await Promise.all([
+      Dataset.find(filter)
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(pageLimit),
+
+      Dataset.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / pageLimit);
 
     res.json({
       success: true,
       count: datasets.length,
+      pagination: {
+        total,
+        page: currentPage,
+        limit: pageLimit,
+        totalPages,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1,
+      },
       datasets,
     });
   } catch (error) {
